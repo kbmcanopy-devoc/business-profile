@@ -8,6 +8,28 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'G-XJEHBSPHZR');
+<script>
+  // Pelacakan konversi kontak KBM Canopy di Google Analytics 4
+  document.addEventListener('click', function (event) {
+    const link = event.target.closest('a[href]');
+    if (!link) return;
+
+    const href = link.getAttribute('href') || '';
+    const isWhatsApp = /^https?:\/\/(wa\.me|api\.whatsapp\.com)\//i.test(href);
+    const isPhone = /^tel:/i.test(href);
+    if (!isWhatsApp && !isPhone) return;
+
+    if (typeof gtag === 'function') {
+      gtag('event', isWhatsApp ? 'click_whatsapp' : 'click_phone', {
+        event_category: 'lead',
+        link_url: href,
+        link_text: (link.innerText || link.getAttribute('aria-label') || '').trim().slice(0, 100),
+        page_location: window.location.href,
+        transport_type: 'beacon'
+      });
+    }
+  }, true);
+</script>
 </script>
 
   <meta charset="UTF-8">
