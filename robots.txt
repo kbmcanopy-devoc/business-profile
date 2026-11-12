@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://kbmcanopy-devoc.github.io/business-profile/sitemap.xml
+Sitemap: https://kbm-canopy.netlify.app/sitemap.xml
