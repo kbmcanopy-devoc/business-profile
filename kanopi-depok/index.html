@@ -91,6 +91,41 @@
     }
   }
   </script>
+
+  <!-- Perlindungan konten KBM Canopy: menghambat penyalinan biasa, bukan pengamanan mutlak -->
+  <style id="kbm-content-protection">
+    /* Teks utama tidak dapat diseleksi; area kontak tetap dapat disalin */
+    main h1, main h2, main h3, main h4, main p, main li,
+    main blockquote, main figcaption, main .prose {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    main a, main button, main input, main textarea, main select,
+    main [data-copy-allowed], footer a, header a, nav a,
+    .contact-info, .contact-info * {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    img { -webkit-user-drag: none; user-drag: none; }
+  </style>
+  <script id="kbm-content-protection-script">
+    document.addEventListener('contextmenu', function (event) {
+      if (event.target.closest('img, picture, figure')) event.preventDefault();
+    });
+    document.addEventListener('dragstart', function (event) {
+      if (event.target.closest('img, picture')) event.preventDefault();
+    });
+    document.addEventListener('copy', function (event) {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) return;
+      const node = selection.anchorNode;
+      const element = node && (node.nodeType === 1 ? node : node.parentElement);
+      if (element && element.closest('main') &&
+          !element.closest('a, button, input, textarea, select, [data-copy-allowed], .contact-info')) {
+        event.preventDefault();
+      }
+    });
+  </script>
 </head>
 <body>
   <header class="bg-white shadow-sm">
