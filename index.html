@@ -518,6 +518,20 @@
             'Detail: ' + (pesan || '-')
           ].join('\n');
           const url = 'https://wa.me/6285124640295?text=' + encodeURIComponent(message);
+
+          // Catat konversi formulir yang membuka WhatsApp; window.open tidak terdeteksi
+          // oleh listener klik tautan WhatsApp di bagian atas halaman.
+          if (typeof gtag === 'function') {
+            gtag('event', 'click_whatsapp', {
+              event_category: 'lead',
+              link_url: url,
+              link_text: 'Formulir penawaran',
+              page_location: window.location.href,
+              event_source: 'contact_form',
+              transport_type: 'beacon'
+            });
+          }
+
           window.open(url, '_blank', 'noopener');
         });
       }
