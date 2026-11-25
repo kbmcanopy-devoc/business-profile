@@ -526,7 +526,26 @@
           ].join('\n');
           const url = 'https://wa.me/6285124640295?text=' + encodeURIComponent(message);
 
-          // Catat lead dan pembukaan WhatsApp tanpa mengirim data pribadi formulir ke GA4.
+          // Buka tab WhatsApp secara sinkron saat masih berada dalam klik pengguna.
+          // Setelah itu beri GA4 kesempatan mengirim kedua event sebelum navigasi.
+          const whatsappWindow = window.open('about:blank', '_blank');
+          let navigationStarted = false;
+          let completedEvents = 0;
+          let fallbackTimer;
+
+          const openWhatsApp = function () {
+            if (navigationStarted) return;
+            navigationStarted = true;
+            if (fallbackTimer) window.clearTimeout(fallbackTimer);
+
+            if (whatsappWindow && !whatsappWindow.closed) {
+              whatsappWindow.location.href = url;
+            } else {
+              // Jika popup diblokir browser, tetap lanjutkan ke WhatsApp pada tab ini.
+              window.location.href = url;
+            }
+          };
+
           if (typeof gtag === 'function') {
             const eventParams = {
               event_category: 'lead',
@@ -534,13 +553,22 @@
               link_text: 'Formulir penawaran',
               page_location: window.location.href,
               event_source: 'contact_form',
-              transport_type: 'beacon'
+              transport_type: 'beacon',
+              event_timeout: 1500
             };
-            gtag('event', 'generate_lead', eventParams);
-            gtag('event', 'click_whatsapp', eventParams);
-          }
 
-          window.open(url, '_blank', 'noopener');
+            const eventDone = function () {
+              completedEvents += 1;
+              if (completedEvents >= 2) openWhatsApp();
+            };
+
+            // Fallback agar pengguna tidak tertahan bila callback GA4 tidak kembali.
+            fallbackTimer = window.setTimeout(openWhatsApp, 1800);
+            gtag('event', 'generate_lead', { ...eventParams, event_callback: eventDone });
+            gtag('event', 'click_whatsapp', { ...eventParams, event_callback: eventDone });
+          } else {
+            openWhatsApp();
+          }
         });
       }
     });
