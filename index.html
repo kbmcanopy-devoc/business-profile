@@ -10,24 +10,31 @@
   gtag('config', 'G-2EJ38X3309');
 </script>
 <script>
-  // Pelacakan konversi kontak KBM Canopy di Google Analytics 4
+  // Pelacakan interaksi penting KBM Canopy di Google Analytics 4.
+  // Jangan mengirim data pribadi dari formulir ke GA4.
   document.addEventListener('click', function (event) {
     const link = event.target.closest('a[href]');
-    if (!link) return;
+    if (!link || typeof gtag !== 'function') return;
 
-    const href = link.getAttribute('href') || '';
-    const isWhatsApp = /^https?:\/\/(wa\.me|api\.whatsapp\.com)\//i.test(href);
-    const isPhone = /^tel:/i.test(href);
-    if (!isWhatsApp && !isPhone) return;
+    const href = (link.getAttribute('href') || '').trim();
+    const text = (link.innerText || link.getAttribute('aria-label') || '').trim().slice(0, 100);
+    const common = {
+      link_url: href,
+      link_text: text,
+      page_location: window.location.href,
+      transport_type: 'beacon'
+    };
 
-    if (typeof gtag === 'function') {
-      gtag('event', isWhatsApp ? 'click_whatsapp' : 'click_phone', {
-        event_category: 'lead',
-        link_url: href,
-        link_text: (link.innerText || link.getAttribute('aria-label') || '').trim().slice(0, 100),
-        page_location: window.location.href,
-        transport_type: 'beacon'
-      });
+    if (/^https?:\/\/(wa\.me|api\.whatsapp\.com)\//i.test(href)) {
+      gtag('event', 'click_whatsapp', { ...common, event_category: 'lead' });
+    } else if (/^tel:/i.test(href)) {
+      gtag('event', 'click_phone', { ...common, event_category: 'lead' });
+    } else if (/^mailto:/i.test(href)) {
+      gtag('event', 'click_email', { ...common, event_category: 'lead' });
+    } else if (/maps\.app\.goo\.gl|google\.[^/]+\/maps|maps\.google\./i.test(href)) {
+      gtag('event', 'click_maps', { ...common, event_category: 'engagement' });
+    } else if (href === '#portfolio' || /portfolio/i.test(href)) {
+      gtag('event', 'view_portfolio', { ...common, event_category: 'engagement' });
     }
   }, true);
 </script>
@@ -104,7 +111,7 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "HomeAndConstructionBusiness",
     "@id": "https://kbm-canopy.netlify.app/#business",
     "name": "KBM Canopy",
     "url": "https://kbm-canopy.netlify.app/",
@@ -519,17 +526,18 @@
           ].join('\n');
           const url = 'https://wa.me/6285124640295?text=' + encodeURIComponent(message);
 
-          // Catat konversi formulir yang membuka WhatsApp; window.open tidak terdeteksi
-          // oleh listener klik tautan WhatsApp di bagian atas halaman.
+          // Catat lead dan pembukaan WhatsApp tanpa mengirim data pribadi formulir ke GA4.
           if (typeof gtag === 'function') {
-            gtag('event', 'click_whatsapp', {
+            const eventParams = {
               event_category: 'lead',
-              link_url: url,
+              link_url: 'https://wa.me/6285124640295',
               link_text: 'Formulir penawaran',
               page_location: window.location.href,
               event_source: 'contact_form',
               transport_type: 'beacon'
-            });
+            };
+            gtag('event', 'generate_lead', eventParams);
+            gtag('event', 'click_whatsapp', eventParams);
           }
 
           window.open(url, '_blank', 'noopener');
